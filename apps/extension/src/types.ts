@@ -1,0 +1,21 @@
+export type CapturedJob = {
+  source: "linkedin" | "greenhouse" | "lever" | "ashby" | "workday" | "generic";
+  sourceJobId?: string;
+  jobUrl?: string;
+  companyName?: string;
+  roleTitle?: string;
+  location?: string;
+  workplaceType?: "remote" | "hybrid" | "onsite" | "unknown";
+  employmentType?: "full_time" | "contract" | "part_time" | "internship" | "unknown";
+  salaryText?: string | null;
+  salaryListed?: boolean;
+  rawDescription?: string;
+  applicationMethod?: string;
+  applicationSourceType?: "unknown" | "direct" | "third_party_recruiter" | "staffing_agency" | "job_board";
+  recruiterName?: string;
+  recruiterCompany?: string;
+  recruiterNotes?: string;
+  resumeVersionId?: string;
+  resumeLabel?: string;
+  notes?: string;
+};

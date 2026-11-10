@@ -1,0 +1,406 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                   String             @id @default(cuid())
+  email                String             @unique
+  name                 String?
+  avatarUrl            String?
+  googleEmail          String?
+  googleAccessToken    String?
+  googleRefreshToken   String?
+  googleTokenExpiry    DateTime?
+  createdAt            DateTime           @default(now())
+  updatedAt            DateTime           @updatedAt
+  resumeVersions       ResumeVersion[]
+  recruiterContacts    RecruiterContact[]
+  jobPostings          JobPosting[]
+  applications         Application[]
+  applicationEvents    ApplicationEvent[]
+  emailEvents          EmailEvent[]
+  jobAnalyses          JobAnalysis[]
+  companyResearch      CompanyResearch[]
+  candidateJobs        CandidateJob[]
+  jobSearchProfile     JobSearchProfile?
+}
+
+model ResumeVersion {
+  id           String        @id @default(cuid())
+  userId       String
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name         String
+  fileUrl      String?
+  rawText      String?
+  isDefault    Boolean       @default(false)
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  applications Application[]
+}
+
+model RecruiterContact {
+  id           String        @id @default(cuid())
+  userId       String
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name         String?
+  firmName     String?
+  email        String?
+  linkedinUrl  String?
+  notes        String?
+  trustLevel   Int?
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  applications Application[]
+
+  @@index([userId, firmName])
+  @@index([userId, email])
+}
+
+model JobPosting {
+  id                   String        @id @default(cuid())
+  userId               String
+  user                 User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  companyName          String
+  roleTitle            String
+  canonicalCompanyName String?
+  canonicalRoleTitle   String?
+  jobUrl               String?
+  source               String?
+  sourceJobId          String?
+  rawDescription       String?
+  location             String?
+  workplaceType        String        @default("unknown")
+  employmentType       String        @default("unknown")
+  salaryText           String?
+  salaryMin            Int?
+  salaryMax            Int?
+  salaryCurrency       String?
+  salaryListed         Boolean       @default(false)
+  seniorityLevel       String?
+  requiredSkills       String        @default("[]")
+  niceToHaveSkills     String        @default("[]")
+  techStack            String        @default("[]")
+  responsibilities     String        @default("[]")
+  benefits             String        @default("[]")
+  redFlags             String        @default("[]")
+  extractedConfidence  Float?
+  createdAt            DateTime      @default(now())
+  updatedAt            DateTime      @updatedAt
+  application          Application?
+  analyses             JobAnalysis[]
+
+  @@index([userId, sourceJobId])
+  @@index([userId, companyName, roleTitle])
+}
+
+model CandidateJob {
+  id                    String                 @id @default(cuid())
+  userId                String
+  user                  User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  source                String                 @default("linkedin")
+  sourceJobId           String?
+  jobUrl                String?
+  companyName           String
+  roleTitle             String
+  location              String?
+  salaryText            String?
+  salaryListed          Boolean                @default(false)
+  workArrangement       String                 @default("unknown")
+  employmentType        String                 @default("unknown")
+  contractDuration      String?
+  hoursPerWeek          String?
+  rawCardText           String?
+  rawDescription        String?
+  status                String                 @default("sourced")
+  fitScore              Int?
+  scoreLabel            String?
+  scoreReasons          String                 @default("[]")
+  riskFlags             String                 @default("[]")
+  requiredTechnologies  String                 @default("[]")
+  preferredTechnologies String                 @default("[]")
+  matchedTechnologies   String                 @default("[]")
+  missingTechnologies   String                 @default("[]")
+  emphasisAreas         String                 @default("[]")
+  application           Application?
+  analyses              CandidateJobAnalysis[]
+  createdAt             DateTime               @default(now())
+  updatedAt             DateTime               @updatedAt
+
+  @@index([userId, status])
+  @@index([userId, sourceJobId])
+  @@index([userId, companyName, roleTitle])
+}
+
+model Application {
+  id                    String             @id @default(cuid())
+  userId                String
+  user                  User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  jobPostingId          String             @unique
+  jobPosting            JobPosting         @relation(fields: [jobPostingId], references: [id], onDelete: Cascade)
+  candidateJobId        String?            @unique
+  candidateJob          CandidateJob?      @relation(fields: [candidateJobId], references: [id], onDelete: SetNull)
+  status                String             @default("applied")
+  source                String?
+  applicationMethod     String?
+  applicationSourceType String             @default("unknown")
+  recruiterContactId    String?
+  recruiterContact      RecruiterContact?  @relation(fields: [recruiterContactId], references: [id], onDelete: SetNull)
+  recruiterName         String?
+  recruiterCompany      String?
+  recruiterNotes        String?
+  appliedAt             DateTime?
+  resumeVersionId       String?
+  resumeVersion         ResumeVersion?     @relation(fields: [resumeVersionId], references: [id])
+  resumeLabel           String?
+  contactName           String?
+  contactEmail          String?
+  lastContactAt         DateTime?
+  nextAction            String?
+  actionNeeded          Boolean            @default(false)
+  interestLevel         Int?
+  notes                 String?
+  interviewDate         DateTime?
+  archivedAt            DateTime?
+  createdAt             DateTime           @default(now())
+  updatedAt             DateTime           @updatedAt
+  events                ApplicationEvent[]
+  emailEvents           EmailEvent[]
+  companyResearch       CompanyResearch[]
+
+  @@index([userId, status])
+  @@index([userId, applicationSourceType])
+  @@index([userId, recruiterCompany])
+}
+
+model ApplicationEvent {
+  id            String      @id @default(cuid())
+  userId        String
+  user          User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  applicationId String
+  application   Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  type          String
+  title         String
+  description   String?
+  metadata      String?
+  occurredAt    DateTime
+  createdAt     DateTime    @default(now())
+
+  @@index([applicationId, occurredAt])
+}
+
+model EmailEvent {
+  id                  String              @id @default(cuid())
+  userId              String
+  user                User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  applicationId       String?
+  application         Application?        @relation(fields: [applicationId], references: [id], onDelete: SetNull)
+  gmailMessageId      String
+  gmailThreadId       String
+  senderEmail         String
+  senderName          String?
+  subject             String
+  snippet             String
+  receivedAt          DateTime
+  classification      String
+  confidence          Float
+  reason              String?
+  actionNeeded        Boolean             @default(false)
+  suggestedNextAction String?
+  reviewStatus            String              @default("pending")
+  correctedClassification String?
+  archivedInGmail         Boolean             @default(false)
+  createdAt               DateTime            @default(now())
+
+  @@unique([userId, gmailMessageId])
+  @@index([userId, classification])
+}
+
+model JobAnalysis {
+  id                        String     @id @default(cuid())
+  userId                    String
+  user                      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  jobPostingId              String
+  jobPosting                JobPosting @relation(fields: [jobPostingId], references: [id], onDelete: Cascade)
+  fitScore                  Int
+  opportunityScore          Int
+  roleFitScore              Int
+  techStackFitScore         Int
+  compensationClarityScore  Int
+  growthPotentialScore      Int?
+  companyStabilityScore     Int?
+  strongestMatches          String     @default("[]")
+  possibleGaps              String     @default("[]")
+  redFlags                  String     @default("[]")
+  resumeAngle               String
+  applicationStrategy       String
+  questionsToAsk            String     @default("[]")
+  concerns                  String     @default("[]")
+  createdAt                 DateTime   @default(now())
+
+  @@index([jobPostingId])
+}
+
+model CandidateJobAnalysis {
+  id                       String       @id @default(cuid())
+  candidateJobId           String
+  candidateJob             CandidateJob @relation(fields: [candidateJobId], references: [id], onDelete: Cascade)
+  overallFitScore          Int
+  techMatchScore           Int?
+  seniorityFitScore        Int?
+  compensationScore        Int?
+  requiredTechnologies     String       @default("[]")
+  preferredTechnologies    String       @default("[]")
+  matchedTechnologies      String       @default("[]")
+  missingTechnologies      String       @default("[]")
+  emphasisAreas            String       @default("[]")
+  likelyDayToDay           String       @default("[]")
+  riskFlags                String       @default("[]")
+  interviewPrepTopics      String       @default("[]")
+  workArrangement          String       @default("unknown")
+  employmentType           String       @default("unknown")
+  seniorityLevel           String       @default("unknown")
+  reportingLine            String?
+  resumePositioning        String?
+  summary                  String?
+  analysisMethod           String       @default("heuristic")
+  model                    String?
+  createdAt                DateTime     @default(now())
+
+  @@index([candidateJobId, createdAt])
+}
+
+model JobSearchProfile {
+  id                       String   @id @default(cuid())
+  userId                   String   @unique
+  user                     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  targetRoles              String   @default("[]")
+  strongTechnologies       String   @default("[]")
+  secondaryTechnologies    String   @default("[]")
+  learningTechnologies     String   @default("[]")
+  avoidTerms               String   @default("[]")
+  preferredWorkArrangement String   @default("remote_or_hybrid")
+  preferredEmploymentType  String   @default("full_time")
+  salaryFloor              Int?
+  preferredLocation        String?
+  recruiterTolerance       String   @default("neutral")
+  createdAt                DateTime @default(now())
+  updatedAt                DateTime @updatedAt
+}
+
+model CompanyResearch {
+  id                 String      @id @default(cuid())
+  userId             String
+  user               User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  applicationId      String
+  application        Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  companyName        String
+  summary            String
+  industry           String?
+  companySize        String?
+  recentSignals      String      @default("[]")
+  stabilityNotes     String      @default("[]")
+  reputationNotes    String      @default("[]")
+  interviewPrepNotes String      @default("[]")
+  sources            String      @default("[]")
+  researchedAt       DateTime
+}
+
+model ResearchTask {
+  id                 String   @id @default(cuid())
+  companyName        String
+  candidateJobId     String?
+  applicationId      String?
+  taskType           String
+  budgetCategory     String   @default("baseline")
+  priority           Int      @default(0)
+  status             String   @default("queued")
+  reason             String?
+  prompt             String?
+  searchCostEstimate Int      @default(1)
+  attempts           Int      @default(0)
+  maxAttempts        Int      @default(2)
+  resultQualityScore Int?
+  scheduledFor       DateTime?
+  createdAt          DateTime @default(now())
+  startedAt          DateTime?
+  completedAt        DateTime?
+
+  @@index([status, priority])
+  @@index([companyName])
+  @@index([candidateJobId])
+  @@index([applicationId])
+  @@index([budgetCategory, status])
+}
+
+model CompanyProfile {
+  id                       String   @id @default(cuid())
+  companyName              String   @unique
+  officialWebsite          String?
+  summary                  String?
+  productCategory          String?
+  customerSegment          String?
+  companySize              String?
+  companyStage             String?
+  hiringSignalScore        Int?
+  riskScore                Int?
+  sourceQualityScore       Int?
+  profileCompletenessScore Int?
+  missingFields            String   @default("[]")
+  riskFlags                String   @default("[]")
+  keySources               String   @default("[]")
+  researchStatus           String   @default("not_started")
+  lastResearchedAt         DateTime?
+  createdAt                DateTime @default(now())
+  updatedAt                DateTime @updatedAt
+
+  @@index([profileCompletenessScore])
+  @@index([researchStatus])
+}
+
+model AiUsageLog {
+  id              String   @id @default(cuid())
+  userId          String?
+  feature         String
+  provider        String
+  model           String
+  inputTokens     Int?
+  outputTokens    Int?
+  estimatedCost   Float?
+  searchEnabled   Boolean  @default(false)
+  searchQueries   Int?
+  candidateJobId  String?
+  applicationId   String?
+  emailEventId    String?
+  createdAt       DateTime @default(now())
+
+  @@index([feature, createdAt])
+  @@index([candidateJobId])
+  @@index([applicationId])
+}
+
+model AiBudgetLedger {
+  id              String   @id @default(cuid())
+  dateKey         String
+  provider        String
+  model           String
+  feature         String
+  budgetCategory  String
+  searchUsed      Boolean  @default(false)
+  searchRequests  Int      @default(0)
+  estimatedCost   Float?
+  researchTaskId  String?
+  candidateJobId  String?
+  applicationId   String?
+  createdAt       DateTime @default(now())
+
+  @@index([dateKey, provider, model])
+  @@index([budgetCategory, dateKey])
+  @@index([researchTaskId])
+  @@index([candidateJobId])
+  @@index([applicationId])
+}

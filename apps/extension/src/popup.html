@@ -1,0 +1,74 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>JobSignal</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main>
+      <header>
+        <div>
+          <p class="eyebrow">JobSignal</p>
+          <h1>Confirm Applied</h1>
+        </div>
+        <div class="version">v0.1.4</div>
+      </header>
+
+      <section id="status" class="status">Capture LinkedIn, review, confirm.</section>
+
+      <section class="panel">
+        <div class="grid-2">
+          <label>Company<input id="companyName" placeholder="Company" /></label>
+          <label>Role<input id="roleTitle" placeholder="Role" /></label>
+        </div>
+        <div class="grid-3">
+          <label>Location<input id="location" placeholder="Location" /></label>
+          <div class="metric"><span>Pay</span><strong id="payStatus">Unknown</strong></div>
+          <div class="metric"><span>JD</span><strong id="jdStatus">—</strong></div>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="grid-2 source-row">
+          <label>Source
+            <select id="applicationSourceType">
+              <option value="unknown">Unsure</option>
+              <option value="direct">Direct</option>
+              <option value="third_party_recruiter">3rd-party recruiter</option>
+              <option value="staffing_agency">Staffing</option>
+              <option value="job_board">Job board</option>
+            </select>
+          </label>
+          <label>Resume<input id="resumeLabel" placeholder="Resume used" /></label>
+        </div>
+        <details>
+          <summary>Recruiter / notes</summary>
+          <div class="grid-2 details-grid">
+            <label>Recruiter<input id="recruiterName" placeholder="Optional" /></label>
+            <label>Firm<input id="recruiterCompany" placeholder="Optional" /></label>
+          </div>
+          <label>Recruiter notes<textarea id="recruiterNotes" placeholder="Context, trust level..."></textarea></label>
+          <label>Notes<textarea id="notes" placeholder="Applied through LinkedIn Easy Apply"></textarea></label>
+        </details>
+      </section>
+
+      <section class="panel">
+        <details>
+          <summary>Connection settings</summary>
+          <label>API base URL<input id="apiBase" placeholder="http://localhost:3000" /></label>
+          <label>Shared secret<input id="sharedSecret" type="password" placeholder="Match EXTENSION_SHARED_SECRET" /></label>
+          <button id="saveSettings" class="secondary">Save settings</button>
+        </details>
+      </section>
+
+      <div class="actions">
+        <button id="capture" class="secondary">Recapture</button>
+        <button id="markApplied">Confirm Applied</button>
+      </div>
+      <a id="openApplication" class="hidden" href="#" target="_blank">Open in JobSignal</a>
+      <pre id="debug"></pre>
+    </main>
+    <script type="module" src="popup.js"></script>
+  </body>
+</html>
